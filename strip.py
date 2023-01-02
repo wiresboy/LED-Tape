@@ -1,4 +1,4 @@
-import struct
+import numpy as np
 
 class LEDPixel:
 	def __init__(self):
@@ -49,19 +49,17 @@ class LEDPixel:
 	@rgb8bit.setter
 	def rgb8bit(self, rgb):
 		self.c = rgb
-
-	#@property
-	#def bgr8bit(self):
-	#	return (self.c[2],self.c[1],self.c[0])
-
-	#@property
-	#def sk9822val(self):
-	#	return struct.pack(">BBBB", (0xe0 | self.i), self.c[2],self.c[1],self.c[0])
+	
+	#faster to look up:
+	def setRGB8bit(self,rgb):
+		self.c = rgb
+	def setIntensity5bit(self, intensity):
+		self.i = intensity
 
 class Strip(tuple):
-	def __new__(self, length:int) -> tuple[LEDPixel]:
+	def __new__(self, length:int, **kwargs) -> tuple[LEDPixel]:
 		"""length: Number of pixels in this particular strip"""
-		return super().__new__(self, tuple([LEDPixel() for z in range(length)]))
+		return super().__new__(self, tuple([LEDPixel() for z in range(length)]), **kwargs)
 
 	def update(self):
 		for p in self:
@@ -74,4 +72,58 @@ class Strip(tuple):
 	def __getitem__(self, index) -> LEDPixel:
 		return super().__getitem__(index)
 
+
+ColorRecordDType = [
+	("r", np.uint8),
+	("g", np.uint8),
+	("b", np.uint8)]
+PixelRecordDType = [
+	("i", np.uint8),
+	("c", ColorRecordDType)]
+
+class StripHW(np.recarray):
+	def __new__(cls, length):
+		return np.zeros(shape=length, dtype=PixelRecordDType).view(cls)
 	
+	def update(self):
+		raise Exception("Incorrect class type: This is for the real hardware!")
+
+	#Remainder from https://stackoverflow.com/a/60216773
+	def __array_finalize__(self, obj: object) -> None:
+		if obj is None: 
+			return
+		#default_attributes = {"attr": 1}
+		#self.__dict__.update(default_attributes)  # another way to set attributes
+	
+	def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):  # this method is called whenever you use a ufunc
+		'''this implementation of __array_ufunc__ makes sure that all custom attributes are maintained when a ufunc operation is performed on our class.'''
+
+		# convert inputs and outputs of class ArraySubclass to np.ndarray to prevent infinite recursion
+		args = ((i.view(np.ndarray) if isinstance(i, StipHW) else i) for i in inputs)
+		outputs = kwargs.pop('out', None)
+		if outputs:
+			kwargs['out'] = tuple((o.view(np.ndarray) if isinstance(o, StipHW) else o) for o in outputs)
+		else:
+			outputs = (None,) * ufunc.nout
+		# call numpys implementation of __array_ufunc__
+		results = super().__array_ufunc__(ufunc, method, *args, **kwargs)  # pylint: disable=no-member
+		if results is NotImplemented:
+			return NotImplemented
+		if method == 'at':
+			# method == 'at' means that the operation is performed in-place. Therefore, we are done.
+			return
+		# now we need to make sure that outputs that where specified with the 'out' argument are handled corectly:
+		if ufunc.nout == 1:
+			results = (results,)
+		results = tuple((self._copy_attrs_to(result) if output is None else output)
+						for result, output in zip(results, outputs))
+		return results[0] if len(results) == 1 else results
+
+	def _copy_attrs_to(self, target):
+		'''copies all attributes of self to the target object. target must be a (subclass of) ndarray'''
+		target = target.view(StipHW)
+		try:
+			target.__dict__.update(self.__dict__)
+		except AttributeError:
+			pass
+		return target
