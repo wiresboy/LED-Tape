@@ -68,7 +68,7 @@ def HSV_2_RGB(H, S, V):
 
 
 
-def NP_HSV_TO_BGR(array:np.ndarray) -> np.recarray[ColorRecordDType]:
+def NP_HSV_TO_BGR_ColorRecordDType(array:np.ndarray) -> np.recarray[ColorRecordDType]:
     H = array[:,0]
     S = array[:,1]
     V = array[:,2]
@@ -76,9 +76,9 @@ def NP_HSV_TO_BGR(array:np.ndarray) -> np.recarray[ColorRecordDType]:
     region = H//43
     remainder = (H%43) * 6
 
-    P = (V * (255 - S)) >> 8
-    Q = (V * (255 - ((S * remainder) >> 8))) >> 8
-    T = (V * (255 - ((S * (255 - remainder)) >> 8))) >> 8
+    P = (V * (255 - S))
+    Q = (V * (255 - (S * remainder)))
+    T = (V * (255 - (S * (255 - remainder))))
 
     lookup = np.array([ #BGR, 8bit
         (P,T,V),
@@ -89,7 +89,7 @@ def NP_HSV_TO_BGR(array:np.ndarray) -> np.recarray[ColorRecordDType]:
         (Q,P,V)
     ])
 
-    return lookup[region,...,range(len(array))]
+    return lookup[region,...,range(len(array))].view(ColorRecordDType)[:,0]
 
 
 class Color(): #8bit color math! All values live as 8 bit RGB
@@ -133,10 +133,18 @@ class Color(): #8bit color math! All values live as 8 bit RGB
     def range_to(self, color2:Color, length:int):
         return [self]*length
 
-    def np_range_to_linear(self, color2:Color, length:int) -> np.recarray:
+    def np_range_to_linear(self, color2:Color, length:int) -> np.recarray[ColorRecordDType]:
         return np.linspace( self.rgb, color2.rgb, length, axis=0).astype(np.uint8).view(ColorRecordDType)[:,0]
 
-    def np_range_to_hsv(self, color2:Color, length:int) -> np.recarray:
-        
-        return np.linspace( self.bgr, color2.bgr, length, axis=0).astype(np.uint8).view(ColorRecordDType)[:,0]
+    def np_range_to_hsv(self, color2:Color, length:int) -> np.recarray[ColorRecordDType]:
+        #TODO linspace should wrap around for hue!
+        hsv1 = RGB_2_HSV(self.rgb)
+        hsv2 = RGB_2_HSV(color2.rgb)
+        hsvspace = np.linspace( hsv1, hsv2, length, axis=0).astype(np.uint8)
 
+        return NP_HSV_TO_BGR_ColorRecordDType(hsvspace)
+
+
+    def np_range_rainbow(self, length:int) -> np.recarray[ColorRecordDType]:
+        hsvspace = np.linspace( (0,255,255) , (255,255,255), length , axis=0).astype(np.uint8)
+        return NP_HSV_TO_BGR_ColorRecordDType(hsvspace)

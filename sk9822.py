@@ -7,6 +7,6 @@ class SPIInterface:
         self.strip = strip
     
     def drawFrame(self):
-        self.interface.xfer3("\0\0\0\0") #Start
+        self.interface.xfer3(b"\0\0\0\0") #Start
         self.interface.xfer3(bytes(self.strip))
-        self.interface.xfer3("\0\0\0\0") #End
+        self.interface.xfer3(b"\0\0\0\0") #End

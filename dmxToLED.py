@@ -23,6 +23,7 @@ def mirror(a):
     return np.concatenate( (a, np.flip(a, axis=0)), axis=0)
 
 def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, parameter1:int, parameter2:int, parameter3:int, startIndex:int, stopIndex:int, align:Align):
+    #print(startIndex, stopIndex)
     #Base parameters
     width = parameter1*3 + 2
     widthScale = 256.0/width
@@ -30,16 +31,16 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
     shift = parameter3-128 #Its signed
 
     if isinstance(strip, StripHW): 
-        strip[:startIndex].i = 0
+        strip[:startIndex].i = 0xe0
         strip[startIndex:stopIndex+1].i = intensity | 0xe0 #StripHW is only used for HW modes, so we need to set this.
-        strip[stopIndex+1:].i = 0
+        strip[stopIndex+1:].i = 0xe0
 
         if align == Align.left:
             strip = strip[startIndex:stopIndex+1]
         elif align == Align.center:
             strip = strip[startIndex:stopIndex+1] #TODO how to handle
         elif align == Align.right:
-            strip = strip[stopIndex:startIndex-1:-1]
+            strip = strip[startIndex:stopIndex+1][::-1]
         else: 
             return
         
@@ -84,8 +85,9 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
             elif mode == Modes.gradient_hsv:
                 gradient = mirror(c1.np_range_to_hsv(c2, width))
             elif mode == Modes.rainbow:
-                return
-                gradient = [Color(hue=theta, saturation=1, luminance=0.5) for theta in np.linspace(0.,1., 256, endpoint=False)]
+                gradient = c1.np_range_rainbow(width*2)
+                #return
+                #gradient = [Color(hue=theta, saturation=1, luminance=0.5) for theta in np.linspace(0.,1., 256, endpoint=False)]
             
             for offset in range(startIndex, stopIndex, 2*width):
                 z = strip[offset:offset+2*width]
@@ -141,7 +143,7 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
 def dmx(universe_data, patch):
     for address, st in patch:
         data = universe_data[address-1:address+14]
-        if (data[7] >= 60) or (data[0] >= 96):
+        if (data[7] >= 70) or (data[0] >= 96):
             return None ##There was an error, probably bc of previs software trying to be secure
         mode = Modes(data[7] // 10)
         align = Align(data[0] // 32)
