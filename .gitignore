@@ -1,0 +1,6 @@
+backup/*
+old/*
+__pycache__/*
+*.esf2
+*.zip
+*.LOG

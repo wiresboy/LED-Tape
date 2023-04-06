@@ -2,63 +2,29 @@ from __future__ import annotations
 import numpy as np
 from strip import Strip, StripHW, ColorRecordDType
 from enum import Enum
+from color import Color
 import random
 
 class Modes(Enum):
     off = 0
     solid = 1
     alternate = 2
-    gradient_scroll = 3
+    gradient_hsv = 3
     random_strobe = 4  #Chunks of size, at rate
     rainbow = 5
+    gradient_linear = 6
 
 class Align(Enum):
     left = 0
     center = 1
     right = 2
 
-
-class Color(): #8bit color math! All values live as 8 bit RGB
-    def __init__(self, *args, **kwargs):#r:int, g:int, b:int):
-        if len(args)==3:
-            self.r = args[0]
-            self.g = args[1]
-            self.b = args[2]
-        elif len(args)==1 and isinstance(args[0], str): #"WEB" mode
-            self.r = int(args[0][1:3], 16)
-            self.g = int(args[0][3:5], 16)
-            self.b = int(args[0][5:7], 16)
-        elif (("h" in kwargs) and ("s" in kwargs) and ("v" in kwargs)):
-            self.r=255
-            self.g=255
-            self.b=255
-            pass #TODO rgb from HSV?
-        elif (("r" in kwargs) and ("g" in kwargs) and ("b" in kwargs)):
-            self.r = kwargs["r"]
-            self.g = kwargs["g"]
-            self.b = kwargs["b"]
-        else:
-            self.r=255
-            self.g=60
-            self.b=60
-
-    @property
-    def rgb(self):
-        return (self.r,self.g,self.b)
-    @rgb.setter
-    def rgb(self,rgb):
-        self.r, self.g, self.b = rgb
-
-    def range_to(self, color2:Color, length:int):
-        return [self]*length
-
-    def np_range_to(self, color2:Color, length:int) -> np.recarray:
-        return []
-
+def mirror(a):
+    return np.concatenate( (a, np.flip(a, axis=0)), axis=0)
 
 def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, parameter1:int, parameter2:int, parameter3:int, startIndex:int, stopIndex:int, align:Align):
     #Base parameters
-    width = parameter1*3 + 1
+    width = parameter1*3 + 2
     widthScale = 256.0/width
     size = parameter2
     shift = parameter3-128 #Its signed
@@ -80,44 +46,50 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
         if mode == Modes.off:
             strip.c = (0,0,0)
         elif mode == Modes.solid:
-            strip.c = c1.rgb
+            strip.c = c1.bgr
         elif mode == Modes.alternate: ##FUTURE ME: Why did I write this while half asleep? Chance of this working: ~10%
             activeWidth = stopIndex - startIndex
             reps = activeWidth / width
             if width > reps: #If there are more pixels in each width than there are repititions, then the outer loop should be repititions
-                lower_cutoff = int(shift/widthScale) % width
-                upper_cutoff = int((shift+size*2)/widthScale) % width
-                invert = lower_cutoff > upper_cutoff
+                lc = (shift         ) %256
+                uc = (shift + size*2) %256
+                lower_cutoff = int(lc/widthScale)
+                upper_cutoff = int(uc/widthScale)
+                invert = lc > uc
                 if invert:
                     lower_cutoff, upper_cutoff = upper_cutoff, lower_cutoff
                 if invert ^ (size>=128):
-                    rgb1 = c1.rgb
-                    rgb2 = c2.rgb
+                    rgb1 = c1.bgr
+                    rgb2 = c2.bgr
                 else:
-                    rgb1 = c2.rgb
-                    rgb2 = c1.rgb
+                    rgb1 = c2.bgr
+                    rgb2 = c1.bgr
+
                 for subStrip in np.split(strip, range(width, len(strip)+width-1, width)):
                     subStrip[:lower_cutoff].c = rgb1
                     subStrip[lower_cutoff:upper_cutoff].c = rgb2
                     subStrip[upper_cutoff:].c = rgb1
             else: #Outer loop over inner pixels
-                rgb1 = c1.rgb
-                rgb2 = c2.rgb
+                rgb1 = c1.bgr
+                rgb2 = c2.bgr
                 for i in range(width):
                     if size*2-256 <= (i*widthScale - shift)%256 < size*2:   #( - size)
                         strip[i::width].c = rgb1
                     else:
                         strip[i::width].c = rgb2
 
-        elif mode in (Modes.gradient_scroll, Modes.rainbow):
-            return
-            if mode == Modes.gradient_scroll:
-                gradient = list(c1.range_to(c2, 128))
-                gradient += gradient[::-1] #Mirror the list!
+        elif mode in (Modes.gradient_linear, Modes.gradient_hsv, Modes.rainbow):
+            if mode == Modes.gradient_linear:
+                gradient = mirror(c1.np_range_to_linear(c2, width))
+            elif mode == Modes.gradient_hsv:
+                gradient = mirror(c1.np_range_to_hsv(c2, width))
             elif mode == Modes.rainbow:
+                return
                 gradient = [Color(hue=theta, saturation=1, luminance=0.5) for theta in np.linspace(0.,1., 256, endpoint=False)]
-
-            [p.setRGB8bit( gradient[ (int((i%width)*widthScale)+shift-size)%256 ].rgb ) for i,p in livePix]
+            
+            for offset in range(startIndex, stopIndex, 2*width):
+                z = strip[offset:offset+2*width]
+                z.c = gradient[:len(z)]
 
     else:
 
@@ -146,8 +118,8 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
                 rgb = c1.rgb
             [p.setRGB8bit(rgb) for i,p in livePix]
 
-        elif mode in (Modes.gradient_scroll, Modes.rainbow):
-            if mode == Modes.gradient_scroll:
+        elif mode in (Modes.gradient_linear, Modes.rainbow):
+            if mode == Modes.gradient_linear:
                 gradient = list(c1.range_to(c2, 128))
                 gradient += gradient[::-1] #Mirror the list!
             elif mode == Modes.rainbow:
@@ -160,7 +132,7 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
             rgb2 = c2.rgb
             upper_cutoff = (size*2)
             lower_cutoff = (size*2-256)
-            [p.setRGB8bit( rgb1 if (lower_cutoff <= (int((i%width)*widthScale)+shift)%256 < upper_cutoff) else rgb2 ) for i,p in livePix] 
+            [p.setRGB8bit( rgb1 if (lower_cutoff <= (int((i%width)*widthScale)+shift)%256 < upper_cutoff) else rgb2 ) for i,p in livePix]
 
         elif mode == Modes.random_strobe:
             pass

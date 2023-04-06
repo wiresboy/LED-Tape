@@ -74,9 +74,9 @@ class Strip(tuple):
 
 
 ColorRecordDType = [
-	("r", np.uint8),
+	("b", np.uint8),
 	("g", np.uint8),
-	("b", np.uint8)]
+	("r", np.uint8)]
 PixelRecordDType = [
 	("i", np.uint8),
 	("c", ColorRecordDType)]
