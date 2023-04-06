@@ -1,0 +1,25 @@
+Altium Designer Pick and Place Locations
+F:\Shared\LED Tape\hw\Face Panel\Project Outputs for Face Panel\Pick Place\Pick Place for hat.txt
+
+========================================================================================================================
+File Design Information:
+
+Date:       30/12/22
+Time:       16:33
+Revision:   Not in VersionControl
+Variant:    No variations
+Units used: mil
+
+Designator Comment                 Layer    Footprint                      Center-X(mil) Center-Y(mil) Rotation Description                                                                                            Height(mil) 
+U5         SN75176BDR              TopLayer D0008A_M                       1800.000      1850.000      0        "Differential Bus Transceiver, 1 TX / 1 RX, 5V, 0 to 70 degC, 8-Pin SOIC (D), Green (RoHS & no Sb/Br)" 68.898      
+Jdmx       B3B-XH-AM(LF)(SN)       TopLayer FP-B3B-XH-AM_LF_SN-MFG         1831.496      1418.701      0        "CONN HEADER VERT 3POS 2.5MM"                                                                          0.000       
+J5v        1729128                 TopLayer PHOE-1729128-2_V               2800.000      1950.000      90       "PCB Terminal Block, 13.5 A, 400 V, 2-Pin THD, RoHS, Bulk"                                             394.213     
+J1_2       47053-1000              TopLayer FP-47053-1000-MFG              2800.000      2507.480      180      "CONN HEADER VERT 4POS 2.54MM"                                                                         0.000       
+J1_1       47053-1000              TopLayer FP-47053-1000-MFG              2300.000      2507.480      180      "CONN HEADER VERT 4POS 2.54MM"                                                                         0.000       
+J1_0       47053-1000              TopLayer FP-47053-1000-MFG              1800.000      2507.480      180      "CONN HEADER VERT 4POS 2.54MM"                                                                         0.000       
+J0_1       47053-1000              TopLayer FP-47053-1000-MFG              2800.000      1457.480      180      "CONN HEADER VERT 4POS 2.54MM"                                                                         0.000       
+J0_0       47053-1000              TopLayer FP-47053-1000-MFG              2300.000      1457.480      180      "CONN HEADER VERT 4POS 2.54MM"                                                                         0.000       
+U1         RASPBERRY_PI_3_MODEL_B+ TopLayer MODULE_RASPBERRY_PI_3_MODEL_B+ 2079.567      2281.732      90       "BCM2835 Raspberry Pi Model B+ - ARM11, VideoCore MPU Embedded Evaluation Board"                       0.000       
+U4         SN74AHCT125DR           TopLayer D0014A_N                       2800.000      2900.000      90       "Quadruple Bus Buffer Gates With 3-State Outputs, D0014A, LARGE T&R"                                   68.898      
+U3         SN74AHCT125DR           TopLayer D0014A_N                       1800.000      2900.000      90       "Quadruple Bus Buffer Gates With 3-State Outputs, D0014A, LARGE T&R"                                   68.898      
+U2         SN74AHCT125DR           TopLayer D0014A_N                       2300.000      1850.000      90       "Quadruple Bus Buffer Gates With 3-State Outputs, D0014A, LARGE T&R"                                   68.898      

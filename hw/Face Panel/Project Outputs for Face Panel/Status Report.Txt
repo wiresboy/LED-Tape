@@ -1,0 +1,10 @@
+Output: Export STEP
+Type  : ExportSTEP
+From  : Variant [[No Variations]] of PCB Document [hat.PcbDoc]
+   Generated File[hat.step]
+
+
+Files Generated   : 1
+Documents Printed : 0
+
+Finished Output Generation At 4:33:16 PM On 12/30/2022

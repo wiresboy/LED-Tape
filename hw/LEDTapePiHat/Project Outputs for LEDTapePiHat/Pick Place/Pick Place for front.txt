@@ -1,0 +1,15 @@
+Altium Designer Pick and Place Locations
+F:\Shared\LED Tape\hw\LEDTapePiHat\Project Outputs for LEDTapePiHat\Pick Place\Pick Place for front.txt
+
+========================================================================================================================
+File Design Information:
+
+Date:       30/12/22
+Time:       15:54
+Revision:   Not in VersionControl
+Variant:    No variations
+Units used: mil
+
+Designator  Comment Layer    Footprint         Center-X(mil) Center-Y(mil) Rotation Description Height(mil) 
+Designator3 Comment TopLayer RASPI_FRONT_PANEL 0.000         0.000         0        ""          0.000       
+Designator1 Comment TopLayer PANELOUTLINE      2906.811      1784.764      0        ""          0.000       

@@ -1,0 +1,8 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=LEDTapePiHat\LEDTapePiHat.PrjPcb
+[Project2]
+ProjectPath=Face Panel\Face Panel.PrjPcb
+[Project3]
+ProjectPath=Slot_in_pi_Holder\Slot_in_pi_Holder.PrjPcb

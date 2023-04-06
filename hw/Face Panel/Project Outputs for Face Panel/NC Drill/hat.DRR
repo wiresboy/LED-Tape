@@ -1,0 +1,21 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: hat.PcbDoc   12/30/2022  4:33:13 PM
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : hat.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      15mil (0.381mm)                                           Round             34        PTH        6.84inch (173.81mm)
+T2      35mil (0.9mm)                                             Round             3         PTH        0.20inch (5.00mm)
+T3      40mil (1.016mm)                                           Round             40        PTH        4.90inch (124.46mm)
+T4      40mil (1.02mm)                                            Round             20        PTH        3.15inch (80.01mm)
+T5      51mil (1.3mm)                                             Round             2         PTH        0.20inch (5.08mm)
+T6      108mil (2.75mm)                                           Round             4         PTH        6.85inch (173.93mm)
+T7      43mil (1.1mm)                                             Round             1         NPTH       0.00inch (0.00mm)
+T8      49mil (1.25mm)                                            Round             5         NPTH       2.55inch (64.77mm)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              109
+
+Total Processing Time (hh:mm:ss) : 00:00:00

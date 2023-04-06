@@ -1,0 +1,14 @@
+Altium Designer Pick and Place Locations
+F:\Shared\LED Tape\hw\Slot_in_pi_Holder\Project Outputs for Slot_in_pi_Holder\Pick Place\Pick Place for holder.txt
+
+========================================================================================================================
+File Design Information:
+
+Date:       30/12/22
+Time:       15:58
+Revision:   Not in VersionControl
+Variant:    No variations
+Units used: mil
+
+Designator Comment                 Layer    Footprint                      Center-X(mil) Center-Y(mil) Rotation Description                                                                      Height(mil) 
+U1         RASPBERRY_PI_3_MODEL_B+ TopLayer MODULE_RASPBERRY_PI_3_MODEL_B+ 1793.898      1574.803      90       "BCM2835 Raspberry Pi Model B+ - ARM11, VideoCore MPU Embedded Evaluation Board" 0.000       
