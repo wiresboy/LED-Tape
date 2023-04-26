@@ -4,6 +4,7 @@ from strip import Strip, StripHW, ColorRecordDType
 from enum import Enum
 from color import Color
 import random
+import math
 
 class Modes(Enum):
     off = 0
@@ -13,11 +14,16 @@ class Modes(Enum):
     random_strobe = 4  #Chunks of size, at rate
     rainbow = 5
     gradient_linear = 6
+    gradient_oneway = 7 #TODO
+    gradient_hsv_oneway = 8 #TODO
+    matrix = 9 #todo
+    
 
 class Align(Enum):
     left = 0
     center = 1
-    right = 2
+    invertCenter = 2
+    right = 3
 
 def mirror(a):
     return np.concatenate( (a, np.flip(a, axis=0)), axis=0)
@@ -29,6 +35,7 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
     widthScale = 256.0/width
     size = parameter2
     shift = parameter3-128 #Its signed
+    shiftUnsigned = parameter3
 
     if isinstance(strip, StripHW): 
         strip[:startIndex].i = 0xe0
@@ -38,7 +45,21 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
         if align == Align.left:
             strip = strip[startIndex:stopIndex+1]
         elif align == Align.center:
-            strip = strip[startIndex:stopIndex+1] #TODO how to handle
+            centerIndex = (startIndex + stopIndex)//2
+            stripfirst = strip[startIndex:centerIndex+1]
+            if (stopIndex-startIndex)%2 == 1: #Odd length, overlap 1 pix
+                stripmirror = strip[centerIndex+1:stopIndex+1][::-1]
+            else:
+                stripmirror = strip[centerIndex+1:stopIndex+1][::-1]
+            strip = stripfirst
+        elif align == Align.invertCenter:
+            centerIndex = (startIndex + stopIndex)//2
+            stripfirst = strip[startIndex:centerIndex+1][::-1]
+            if (stopIndex-startIndex)%2 == 1: #Odd length, overlap 1 pix
+                stripmirror = strip[centerIndex+1:stopIndex+1]
+            else:
+                stripmirror = strip[centerIndex:stopIndex+1]
+            strip = stripfirst
         elif align == Align.right:
             strip = strip[startIndex:stopIndex+1][::-1]
         else: 
@@ -79,19 +100,31 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
                     else:
                         strip[i::width].c = rgb2
 
-        elif mode in (Modes.gradient_linear, Modes.gradient_hsv, Modes.rainbow):
+        elif mode in (Modes.gradient_linear, Modes.gradient_oneway, Modes.gradient_hsv, Modes.gradient_hsv_oneway, Modes.rainbow, Modes.matrix):
             if mode == Modes.gradient_linear:
                 gradient = mirror(c1.np_range_to_linear(c2, width))
+            elif mode == Modes.gradient_oneway:
+                gradient = c1.np_range_to_linear(c2, width*2)
             elif mode == Modes.gradient_hsv:
                 gradient = mirror(c1.np_range_to_hsv(c2, width))
+            elif mode == Modes.gradient_hsv_oneway:
+                gradient = c1.np_range_to_hsv(c2, width*2)
             elif mode == Modes.rainbow:
                 gradient = c1.np_range_rainbow(width*2)
-                #return
-                #gradient = [Color(hue=theta, saturation=1, luminance=0.5) for theta in np.linspace(0.,1., 256, endpoint=False)]
+            elif mode == Modes.matrix:
+                gradient = c1.matrix(width*2, size)
             
-            for offset in range(startIndex, stopIndex, 2*width):
-                z = strip[offset:offset+2*width]
-                z.c = gradient[:len(z)]
+            shiftRollover = math.ceil(2*shiftUnsigned/widthScale)-2*width
+            for offset in range(startIndex+shiftRollover, stopIndex, 2*width):
+                if offset<=0 and offset > -2*width:
+                    z = strip[0:offset+2*width]
+                    z.c = gradient[-len(z):]
+                else:
+                    z = strip[offset:offset+2*width]
+                    z.c = gradient[:len(z)]
+
+        if align==Align.invertCenter or align==Align.center:
+           stripmirror[:] = strip
 
     else:
 
@@ -143,7 +176,7 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
 def dmx(universe_data, patch):
     for address, st in patch:
         data = universe_data[address-1:address+14]
-        if (data[7] >= 70) or (data[0] >= 96):
+        if (data[7] >= 100) or (data[0] >= 128):
             return None ##There was an error, probably bc of previs software trying to be secure
         mode = Modes(data[7] // 10)
         align = Align(data[0] // 32)
