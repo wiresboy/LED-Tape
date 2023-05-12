@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from strip import ColorRecordDType
+import math
 def RGB_2_HSV(RGB):
     ''' Converts an integer RGB tuple (value range from 0 to 255) to an HSV tuple '''
 
@@ -148,3 +149,10 @@ class Color(): #8bit color math! All values live as 8 bit RGB
     def np_range_rainbow(self, length:int) -> np.recarray[ColorRecordDType]:
         hsvspace = np.linspace( (0,255,255) , (255,255,255), length , axis=0).astype(np.uint8)
         return NP_HSV_TO_BGR_ColorRecordDType(hsvspace)
+    
+    def matrix(self, totalsize:int, activeFraction:int) -> np.recarray[ColorRecordDType]:
+        m = np.zeros(totalsize, dtype = ColorRecordDType)
+        activeLen = math.floor(min(totalsize*activeFraction/256, totalsize-2))
+        m[0:activeLen] = self.np_range_to_linear(Color(0,0,0), activeLen)[::-1]
+        m[activeLen] = (255,255,255)
+        return m
