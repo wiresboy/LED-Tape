@@ -5,7 +5,6 @@ from enum import Enum
 from color import Color
 import random
 import math
-import random
 
 class Modes(Enum):
     off = 0
@@ -56,7 +55,7 @@ def control(strip:Strip|StripHW, c1:Color, c2:Color, intensity:int, mode:Modes, 
             if (stopIndex-startIndex)%2 == 1: #Odd length, overlap 1 pix
                 stripmirror = strip[centerIndex+1:stopIndex+1][::-1]
             else:
-                stripmirror = strip[centerIndex:stopIndex+1][::-1]
+                stripmirror = strip[centerIndex+1:stopIndex+1][::-1]
             strip = stripfirst
         elif align == Align.invertCenter:
             centerIndex = (startIndex + stopIndex)//2
